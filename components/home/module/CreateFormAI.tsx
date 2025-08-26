@@ -7,7 +7,7 @@ import { Loader, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 const demoPrompts = [
-  'Create a signup form with name, email, and password',
+  'Create a professional real estate property submission form',
   'Generate a feedback form with rating, comments, and email',
   'Build a job application form with resume upload, name, and experience',
 ]
