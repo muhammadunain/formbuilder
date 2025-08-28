@@ -1,12 +1,14 @@
-import NavbarMain from '@/components/header/Navbar'
+import Footer from '@/components/header/Footer'
+import Header from '@/components/header/Navbar'
 import { PropsLayout } from '@/types'
 import React from 'react'
 
 const Layout = ({children}:PropsLayout) => {
   return (
     <>
-    <NavbarMain/>
+    {/* <Header/> */}
       {children}
+      {/* <Footer/> */}
     </>
   )
 }

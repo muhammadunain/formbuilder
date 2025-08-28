@@ -120,3 +120,11 @@
     @apply bg-background text-foreground;
   }
 }
+@layer utilities {
+  .brand-bg {
+    @apply bg-[#6e40f7];
+  }
+  .brand-text {
+    @apply text-[#6e40f7];
+  }
+}

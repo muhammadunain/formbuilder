@@ -20,3 +20,10 @@ export interface FormType {
   formFields: FormField[];
 }
 
+
+
+export interface FormData {
+  formTitle: string
+  formSubheading: string
+  formFields: FormField[]
+}

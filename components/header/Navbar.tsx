@@ -1,32 +1,43 @@
-'use client'
-import React from 'react'
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
-const NavbarMain = () => {
+const Header = () => {
   return (
-     <header className="w-full relative z-10">
-          <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-6 md:px-8">
-            <div className="flex items-center gap-3">
-              <div className="h-6 w-6 rounded-full bg-white" />
-              <span className="text-lg font-semibold tracking-tight">MoraAI</span>
-            </div>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          <Link href={'/'}>
+        <div className="flex items-center space-x-2">
+          <div className="h-8 w-8 rounded-lg bg-[#6e40f7]"></div>
+          <span className="text-xl font-bold text-foreground">AI FormBuilder</span>
+        </div>
+          </Link>
+        
+        <nav className="hidden md:flex items-center space-x-8">
+          <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Home
+          </Link>
+          <Link href="/create-form" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+           Create Form
+          </Link>
+          <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Pricing
+          </a>
+          <Link href="#contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Contact
+          </Link>
+        </nav>
 
-            <nav className="hidden items-center gap-8 text-sm/6 text-white/80 md:flex">
-              {['Product','Docs','Customers','Resources','Partners','Pricing'].map((i)=>(
-                <a key={i} className="hover:text-white" href="#">{i}</a>
-              ))}
-            </nav>
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="sm">
+            Sign In
+          </Button>
+          <Button variant="hero" size="sm">
+            Get Started
+          </Button>
+        </div>
+      </div>
+    </header>
+  );
+};
 
-            <div className="hidden items-center gap-3 md:flex">
-              <button className="rounded-full px-4 py-2 text-sm text-white/80 hover:text-white">Sign in</button>
-              <button className="rounded-full bg-white px-4 py-2 text-sm font-medium text-black shadow-sm transition hover:bg-white/90">Request Demo</button>
-            </div>
-
-            <button className="md:hidden rounded-full bg-white/10 px-3 py-2 text-sm">Menu</button>
-          </div>
-        </header>
-
-
-  )
-}
-
-export default NavbarMain
+export default Header;

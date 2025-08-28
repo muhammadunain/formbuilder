@@ -11,147 +11,37 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Trash2, GripVertical, Plus, Edit, Save, Copy, Eye, ExternalLink, Check } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { Separator } from "@/components/ui/separator"
+import { Trash2, GripVertical, Plus, Edit, Save, ChevronLeft, ChevronRight, Check } from "lucide-react"
+import { preBuiltElements } from '@/constants/bgcode'
 
 interface FormField {
   fieldId: string
   fieldType: string
   fieldName: string
   fieldLabel: string
-  placeholder?: string
+  placeholder: string
   required: boolean
   validation: string
-  options?: string[]
+  options: string[]
+}
+
+interface FormStep {
+  stepId: string
+  stepTitle: string
+  stepDescription: string
+  formFields: FormField[]
 }
 
 interface FormData {
   formTitle: string
   formSubheading: string
-  formFields: FormField[]
+  isMultiStep?: boolean
+  totalSteps?: number
+  steps?: FormStep[]
+  formFields?: FormField[]
 }
-
-// Pre-built form elements for the sidebar
-const preBuiltElements = [
-  {
-    type: 'text',
-    label: 'Text Input',
-    icon: '📝',
-    defaultField: {
-      fieldType: 'text',
-      fieldLabel: 'Text Field',
-      placeholder: 'Enter text...',
-      required: false,
-      validation: 'nonEmpty'
-    }
-  },
-  {
-    type: 'email',
-    label: 'Email Input',
-    icon: '📧',
-    defaultField: {
-      fieldType: 'email',
-      fieldLabel: 'Email Address',
-      placeholder: 'Enter email...',
-      required: true,
-      validation: 'email'
-    }
-  },
-  {
-    type: 'tel',
-    label: 'Phone Input',
-    icon: '📞',
-    defaultField: {
-      fieldType: 'tel',
-      fieldLabel: 'Phone Number',
-      placeholder: 'Enter phone...',
-      required: false,
-      validation: 'phone'
-    }
-  },
-  {
-    type: 'textarea',
-    label: 'Textarea',
-    icon: '📄',
-    defaultField: {
-      fieldType: 'textarea',
-      fieldLabel: 'Message',
-      placeholder: 'Enter your message...',
-      required: false,
-      validation: 'nonEmpty'
-    }
-  },
-  {
-    type: 'select',
-    label: 'Dropdown',
-    icon: '📋',
-    defaultField: {
-      fieldType: 'select',
-      fieldLabel: 'Select Option',
-      placeholder: 'Choose an option...',
-      required: false,
-      validation: 'nonEmpty',
-      options: ['Option 1', 'Option 2', 'Option 3']
-    }
-  },
-  {
-    type: 'radio',
-    label: 'Radio Buttons',
-    icon: '🔘',
-    defaultField: {
-      fieldType: 'radio',
-      fieldLabel: 'Choose One',
-      required: false,
-      validation: 'nonEmpty',
-      options: ['Option 1', 'Option 2', 'Option 3']
-    }
-  },
-  {
-    type: 'checkbox',
-    label: 'Checkboxes',
-    icon: '☑️',
-    defaultField: {
-      fieldType: 'checkbox',
-      fieldLabel: 'Select Multiple',
-      required: false,
-      validation: 'nonEmpty',
-      options: ['Option 1', 'Option 2', 'Option 3']
-    }
-  },
-  {
-    type: 'number',
-    label: 'Number Input',
-    icon: '🔢',
-    defaultField: {
-      fieldType: 'number',
-      fieldLabel: 'Number',
-      placeholder: 'Enter number...',
-      required: false,
-      validation: 'number'
-    }
-  },
-  {
-    type: 'date',
-    label: 'Date Picker',
-    icon: '📅',
-    defaultField: {
-      fieldType: 'date',
-      fieldLabel: 'Date',
-      required: false,
-      validation: 'date'
-    }
-  },
-  {
-    type: 'file',
-    label: 'File Upload',
-    icon: '📎',
-    defaultField: {
-      fieldType: 'file',
-      fieldLabel: 'Upload File',
-      required: false,
-      validation: 'file'
-    }
-  }
-]
 
 const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
   const [formData, setFormData] = useState<FormData>(
@@ -162,28 +52,41 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
     }
   )
   const [draggedItem, setDraggedItem] = useState<any>(null)
+  const [draggedFieldIndex, setDraggedFieldIndex] = useState<number | null>(null)
   const [editingField, setEditingField] = useState<string | null>(null)
   const [isBuilderMode, setIsBuilderMode] = useState(true)
-  const [showLivePreview, setShowLivePreview] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const [copyType, setCopyType] = useState<'json' | 'html' | null>(null)
+  const [currentStep, setCurrentStep] = useState(0)
+
+  const isMultiStep = formData.isMultiStep && formData.steps && formData.steps.length > 0
+  const totalSteps = isMultiStep ? formData.steps!.length : 1
 
   const generateFieldId = () => {
     return `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   }
 
-  const handleDragStart = (e: React.DragEvent, element: any) => {
+  // Handle dragging new elements from sidebar
+  const handleElementDragStart = (e: React.DragEvent, element: any) => {
     setDraggedItem(element)
+    setDraggedFieldIndex(null)
     e.dataTransfer.effectAllowed = 'copy'
+  }
+
+  // Handle dragging existing form fields
+  const handleFieldDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedFieldIndex(index)
+    setDraggedItem(null)
+    e.dataTransfer.effectAllowed = 'move'
   }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
-    e.dataTransfer.dropEffect = 'copy'
+    e.dataTransfer.dropEffect = draggedItem ? 'copy' : 'move'
   }
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent, dropIndex?: number) => {
     e.preventDefault()
+    
+    // Adding new element from sidebar
     if (draggedItem) {
       const newField: FormField = {
         ...draggedItem.defaultField,
@@ -191,182 +94,179 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
         fieldName: draggedItem.defaultField.fieldLabel.toLowerCase().replace(/\s+/g, '_')
       }
       
-      setFormData(prev => ({
-        ...prev,
-        formFields: [...prev.formFields, newField]
-      }))
+      if (isMultiStep) {
+        setFormData(prev => ({
+          ...prev,
+          steps: prev.steps!.map((step, index) => 
+            index === currentStep 
+              ? { 
+                  ...step, 
+                  formFields: dropIndex !== undefined 
+                    ? [
+                        ...step.formFields.slice(0, dropIndex),
+                        newField,
+                        ...step.formFields.slice(dropIndex)
+                      ]
+                    : [...step.formFields, newField]
+                }
+              : step
+          )
+        }))
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          formFields: dropIndex !== undefined 
+            ? [
+                ...(prev.formFields || []).slice(0, dropIndex),
+                newField,
+                ...(prev.formFields || []).slice(dropIndex)
+              ]
+            : [...(prev.formFields || []), newField]
+        }))
+      }
       setDraggedItem(null)
+    }
+    
+    // Reordering existing fields
+    if (draggedFieldIndex !== null && dropIndex !== undefined && draggedFieldIndex !== dropIndex) {
+      const currentFields = getCurrentFields()
+      const draggedField = currentFields[draggedFieldIndex]
+      const newFields = [...currentFields]
+      
+      // Remove dragged field
+      newFields.splice(draggedFieldIndex, 1)
+      
+      // Insert at new position
+      const insertIndex = draggedFieldIndex < dropIndex ? dropIndex - 1 : dropIndex
+      newFields.splice(insertIndex, 0, draggedField)
+      
+      if (isMultiStep) {
+        setFormData(prev => ({
+          ...prev,
+          steps: prev.steps!.map((step, index) => 
+            index === currentStep 
+              ? { ...step, formFields: newFields }
+              : step
+          )
+        }))
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          formFields: newFields
+        }))
+      }
+      setDraggedFieldIndex(null)
     }
   }
 
   const removeField = (fieldId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      formFields: prev.formFields.filter(field => field.fieldId !== fieldId)
-    }))
+    if (isMultiStep) {
+      setFormData(prev => ({
+        ...prev,
+        steps: prev.steps!.map((step, index) => 
+          index === currentStep
+            ? { ...step, formFields: step.formFields.filter(field => field.fieldId !== fieldId) }
+            : step
+        )
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        formFields: prev.formFields!.filter(field => field.fieldId !== fieldId)
+      }))
+    }
   }
 
   const updateField = (fieldId: string, updates: Partial<FormField>) => {
-    setFormData(prev => ({
-      ...prev,
-      formFields: prev.formFields.map(field => 
-        field.fieldId === fieldId ? { ...field, ...updates } : field
-      )
-    }))
-  }
-
-  const moveField = (fromIndex: number, toIndex: number) => {
-    setFormData(prev => {
-      const newFields = [...prev.formFields]
-      const [removed] = newFields.splice(fromIndex, 1)
-      newFields.splice(toIndex, 0, removed)
-      return { ...prev, formFields: newFields }
-    })
-  }
-
-  // Copy functionality
-  const copyFormAsJSON = async () => {
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(formData, null, 2))
-      setCopied(true)
-      setCopyType('json')
-      setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
-      console.error('Failed to copy JSON:', err)
+    if (isMultiStep) {
+      setFormData(prev => ({
+        ...prev,
+        steps: prev.steps!.map((step, index) => 
+          index === currentStep
+            ? {
+                ...step,
+                formFields: step.formFields.map(field => 
+                  field.fieldId === fieldId ? { ...field, ...updates } : field
+                )
+              }
+            : step
+        )
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        formFields: prev.formFields!.map(field => 
+          field.fieldId === fieldId ? { ...field, ...updates } : field
+        )
+      }))
     }
   }
 
-  const generateHTMLForm = () => {
-    const htmlFields = formData.formFields.map(field => {
-      const { fieldId, fieldType, fieldLabel, placeholder, required, options } = field
-      
-      switch (fieldType) {
-        case 'text':
-        case 'email':
-        case 'tel':
-        case 'password':
-        case 'url':
-        case 'number':
-        case 'date':
-          return `    <div class="form-group">
-      <label for="${fieldId}">${fieldLabel}${required ? ' *' : ''}</label>
-      <input type="${fieldType}" id="${fieldId}" name="${fieldId}" placeholder="${placeholder || ''}"${required ? ' required' : ''} />
-    </div>`
+  const getCurrentFields = (): FormField[] => {
+    if (isMultiStep) {
+      return formData.steps![currentStep]?.formFields || []
+    }
+    return formData.formFields || []
+  }
 
-        case 'textarea':
-          return `    <div class="form-group">
-      <label for="${fieldId}">${fieldLabel}${required ? ' *' : ''}</label>
-      <textarea id="${fieldId}" name="${fieldId}" placeholder="${placeholder || ''}"${required ? ' required' : ''}></textarea>
-    </div>`
+  const nextStep = () => {
+    if (currentStep < totalSteps - 1) {
+      setCurrentStep(currentStep + 1)
+    }
+  }
 
-        case 'select':
-          return `    <div class="form-group">
-      <label for="${fieldId}">${fieldLabel}${required ? ' *' : ''}</label>
-      <select id="${fieldId}" name="${fieldId}"${required ? ' required' : ''}>
-        <option value="">${placeholder || `Select ${fieldLabel}`}</option>
-${options?.map(option => `        <option value="${option}">${option}</option>`).join('\n') || ''}
-      </select>
-    </div>`
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
 
-        case 'radio':
-          return `    <div class="form-group">
-      <fieldset>
-        <legend>${fieldLabel}${required ? ' *' : ''}</legend>
-${options?.map((option, idx) => `        <div>
-          <input type="radio" id="${fieldId}-${idx}" name="${fieldId}" value="${option}"${required && idx === 0 ? ' required' : ''} />
-          <label for="${fieldId}-${idx}">${option}</label>
-        </div>`).join('\n') || ''}
-      </fieldset>
-    </div>`
+  const renderMultiStepNav = () => {
+    if (!isMultiStep) return null
 
-        case 'checkbox':
-          if (options && options.length > 1) {
-            return `    <div class="form-group">
-      <fieldset>
-        <legend>${fieldLabel}${required ? ' *' : ''}</legend>
-${options.map((option, idx) => `        <div>
-          <input type="checkbox" id="${fieldId}-${idx}" name="${fieldId}[]" value="${option}" />
-          <label for="${fieldId}-${idx}">${option}</label>
-        </div>`).join('\n')}
-      </fieldset>
-    </div>`
-          } else {
-            return `    <div class="form-group">
-      <div>
-        <input type="checkbox" id="${fieldId}" name="${fieldId}"${required ? ' required' : ''} />
-        <label for="${fieldId}">${fieldLabel}${required ? ' *' : ''}</label>
-      </div>
-    </div>`
-          }
-
-        case 'file':
-          return `    <div class="form-group">
-      <label for="${fieldId}">${fieldLabel}${required ? ' *' : ''}</label>
-      <input type="file" id="${fieldId}" name="${fieldId}"${required ? ' required' : ''} />
-    </div>`
-
-        default:
-          return `    <div class="form-group">
-      <label for="${fieldId}">${fieldLabel}${required ? ' *' : ''}</label>
-      <input type="text" id="${fieldId}" name="${fieldId}" placeholder="${placeholder || ''}"${required ? ' required' : ''} />
-    </div>`
-      }
-    }).join('\n\n')
-
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${formData.formTitle}</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .form-container { background: #f9f9f9; padding: 30px; border-radius: 8px; }
-        .form-group { margin-bottom: 20px; }
-        label, legend { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
-        textarea { resize: vertical; min-height: 100px; }
-        fieldset { border: none; padding: 0; margin: 0; }
-        fieldset div { margin-bottom: 10px; }
-        fieldset input[type="radio"], fieldset input[type="checkbox"] { width: auto; margin-right: 8px; }
-        button { background: #007cba; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background: #005a8b; }
-        .required { color: #d00; }
-    </style>
-</head>
-<body>
-    <div class="form-container">
-        <h1>${formData.formTitle}</h1>
-        ${formData.formSubheading ? `<p>${formData.formSubheading}</p>` : ''}
+    return (
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          {formData.steps!.map((step, index) => (
+            <React.Fragment key={step.stepId}>
+              <div className="flex flex-col items-center">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                    index < currentStep
+                      ? 'bg-green-500 text-white'
+                      : index === currentStep
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-600'
+                  }`}
+                >
+                  {index < currentStep ? <Check size={16} /> : index + 1}
+                </div>
+                <div className="mt-2 text-xs text-center max-w-20">
+                  <div className="font-medium truncate">{step.stepTitle}</div>
+                </div>
+              </div>
+              {index < formData.steps!.length - 1 && (
+                <div
+                  className={`flex-1 h-1 mx-2 transition-colors ${
+                    index < currentStep ? 'bg-green-500' : 'bg-gray-200'
+                  }`}
+                />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
         
-        <form method="POST" action="#">
-${htmlFields}
-
-            <div class="form-group">
-                <button type="submit">Submit Form</button>
-            </div>
-        </form>
-    </div>
-</body>
-</html>`
-  }
-
-  const copyFormAsHTML = async () => {
-    try {
-      await navigator.clipboard.writeText(generateHTMLForm())
-      setCopied(true)
-      setCopyType('html')
-      setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
-      console.error('Failed to copy HTML:', err)
-    }
-  }
-
-  const openLivePreview = () => {
-    const htmlContent = generateHTMLForm()
-    const blob = new Blob([htmlContent], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
-    window.open(url, '_blank')
+        <Progress 
+          value={((currentStep + 1) / totalSteps) * 100} 
+          className="w-full h-2" 
+        />
+        
+        <div className="flex justify-between text-sm text-gray-500 mt-2">
+          <span>Step {currentStep + 1} of {totalSteps}</span>
+          <span>{Math.round(((currentStep + 1) / totalSteps) * 100)}% Complete</span>
+        </div>
+      </div>
+    )
   }
 
   const renderField = (field: FormField, index: number) => {
@@ -472,7 +372,9 @@ ${htmlFields}
         key={fieldId}
         className={`relative group p-4 border rounded-lg ${isBuilderMode ? 'border-dashed border-gray-300 hover:border-blue-400' : 'border-gray-200'} transition-colors`}
         draggable={isBuilderMode}
-        onDragStart={(e) => e.dataTransfer.setData('text/plain', index.toString())}
+        onDragStart={(e) => handleFieldDragStart(e, index)}
+        onDragOver={handleDragOver}
+        onDrop={(e) => handleDrop(e, index)}
       >
         {isBuilderMode && (
           <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -570,7 +472,7 @@ ${htmlFields}
               <div
                 key={index}
                 draggable
-                onDragStart={(e) => handleDragStart(e, element)}
+                onDragStart={(e) => handleElementDragStart(e, element)}
                 className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-grab hover:bg-gray-100 transition-colors"
               >
                 <span className="text-lg">{element.icon}</span>
@@ -580,8 +482,10 @@ ${htmlFields}
             ))}
           </div>
 
+          <Separator />
+
           {/* Form Settings */}
-          <div className="border-t pt-4">
+          <div>
             <h3 className="font-medium mb-3">Form Settings</h3>
             <div className="space-y-3">
               <div>
@@ -623,29 +527,72 @@ ${htmlFields}
                   {formData.formSubheading}
                 </CardDescription>
               )}
+              
+              {isMultiStep && !isBuilderMode && renderMultiStepNav()}
             </CardHeader>
             
             <CardContent>
+              {isMultiStep && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {formData.steps![currentStep]?.stepTitle}
+                  </h3>
+                  {formData.steps![currentStep]?.stepDescription && (
+                    <p className="text-gray-600 mt-1">
+                      {formData.steps![currentStep].stepDescription}
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div
                 className={`space-y-6 ${isBuilderMode ? 'min-h-[300px]' : ''}`}
                 onDragOver={handleDragOver}
-                onDrop={handleDrop}
+                onDrop={(e) => handleDrop(e)}
               >
-                {formData.formFields.length === 0 && isBuilderMode ? (
+                {getCurrentFields().length === 0 && isBuilderMode ? (
                   <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
                     <p className="text-gray-500">
-                      Drag and drop form elements here to build your form
+                      Drag and drop form elements here to build your {isMultiStep ? 'step' : 'form'}
                     </p>
                   </div>
                 ) : (
-                  formData.formFields.map((field, index) => renderField(field, index))
+                  getCurrentFields().map((field, index) => renderField(field, index))
                 )}
                 
-                {!isBuilderMode && formData.formFields.length > 0 && (
+                {!isBuilderMode && getCurrentFields().length > 0 && (
                   <div className="pt-4">
-                    <Button type="submit" className="w-full">
-                      Submit Form
-                    </Button>
+                    {isMultiStep ? (
+                      <div className="flex justify-between">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={prevStep}
+                          disabled={currentStep === 0}
+                        >
+                          <ChevronLeft size={16} className="mr-2" />
+                          Previous
+                        </Button>
+                        
+                        {currentStep === totalSteps - 1 ? (
+                          <Button type="submit">
+                            Submit Form
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            onClick={nextStep}
+                          >
+                            Next
+                            <ChevronRight size={16} className="ml-2" />
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <Button type="submit" className="w-full">
+                        Submit Form
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
