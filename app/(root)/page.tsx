@@ -10,14 +10,14 @@ import React from 'react'
 const Home = () => {
   return (
 <>
-   <div className=' h-[700px] relative'>
+   {/* <div className=' h-[700px] relative'>
   <DarkVeil />
-</div>
-{/* <Hero/>
+</div> */}
+<Hero/>
 <Features/>
 <HowItWorks/>
 <Testimonials/>
-<CTA/> */}
+<CTA/>
 </>
   )
 }

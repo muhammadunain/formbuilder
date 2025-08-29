@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { ModeToggle } from "../ui/mode-toggle";
 
 const Header = () => {
   return (
@@ -31,9 +32,7 @@ const Header = () => {
           <Button variant="ghost" size="sm">
             Sign In
           </Button>
-          <Button variant="hero" size="sm">
-            Get Started
-          </Button>
+<ModeToggle/>         
         </div>
       </div>
     </header>

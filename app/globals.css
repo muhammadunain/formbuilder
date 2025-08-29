@@ -128,3 +128,9 @@
     @apply text-[#6e40f7];
   }
 }
+
+
+::view-transition-old(root), ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}

@@ -13,8 +13,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import { Trash2, GripVertical, Plus, Edit, Save, ChevronLeft, ChevronRight, Check } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Trash2, GripVertical, Plus, Edit, Save, ChevronLeft, ChevronRight, Check, Share2, Eye, Moon, Sun, Copy, ExternalLink } from "lucide-react"
 import { preBuiltElements } from '@/constants/bgcode'
+import FormLoading from '@/components/home/module/Loading'
 
 interface FormField {
   fieldId: string
@@ -43,6 +45,76 @@ interface FormData {
   formFields?: FormField[]
 }
 
+// Enhanced preBuiltElements with e-signature fields
+const enhancedPreBuiltElements = [
+  ...preBuiltElements,
+  {
+    icon: "✍️",
+    label: "Signature",
+    type: "signature",
+    defaultField: {
+      fieldType: "signature",
+      fieldLabel: "Digital Signature",
+      placeholder: "Click to sign",
+      required: true,
+      validation: "",
+      options: []
+    }
+  },
+  {
+    icon: "📋",
+    label: "Initial Field",
+    type: "initial",
+    defaultField: {
+      fieldType: "initial",
+      fieldLabel: "Initial Here",
+      placeholder: "Add your initials",
+      required: false,
+      validation: "",
+      options: []
+    }
+  },
+  {
+    icon: "📅",
+    label: "Date Signed",
+    type: "date-signed",
+    defaultField: {
+      fieldType: "date-signed",
+      fieldLabel: "Date Signed",
+      placeholder: "",
+      required: true,
+      validation: "",
+      options: []
+    }
+  },
+  {
+    icon: "🏢",
+    label: "Company",
+    type: "company",
+    defaultField: {
+      fieldType: "company",
+      fieldLabel: "Company/Organization",
+      placeholder: "Enter company name",
+      required: false,
+      validation: "",
+      options: []
+    }
+  },
+  {
+    icon: "💼",
+    label: "Title/Position",
+    type: "title",
+    defaultField: {
+      fieldType: "title",
+      fieldLabel: "Title/Position",
+      placeholder: "Enter your title",
+      required: false,
+      validation: "",
+      options: []
+    }
+  }
+]
+
 const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
   const [formData, setFormData] = useState<FormData>(
     initialData || {
@@ -56,12 +128,26 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
   const [editingField, setEditingField] = useState<string | null>(null)
   const [isBuilderMode, setIsBuilderMode] = useState(true)
   const [currentStep, setCurrentStep] = useState(0)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [shareDialogOpen, setShareDialogOpen] = useState(false)
+  const [previewMode, setPreviewMode] = useState(false)
+const [copied, setCopied] = useState(false)
 
   const isMultiStep = formData.isMultiStep && formData.steps && formData.steps.length > 0
   const totalSteps = isMultiStep ? formData.steps!.length : 1
 
   const generateFieldId = () => {
     return `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  }
+
+  const generateShareLink = () => {
+    // In a real app, this would generate an actual shareable link
+  return window.location.href
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
   }
 
   // Handle dragging new elements from sidebar
@@ -236,19 +322,23 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
                       ? 'bg-green-500 text-white'
                       : index === currentStep
                       ? 'bg-blue-500 text-white'
+                      : isDarkMode 
+                      ? 'bg-gray-700 text-gray-300'
                       : 'bg-gray-200 text-gray-600'
                   }`}
                 >
                   {index < currentStep ? <Check size={16} /> : index + 1}
                 </div>
                 <div className="mt-2 text-xs text-center max-w-20">
-                  <div className="font-medium truncate">{step.stepTitle}</div>
+                  <div className={`font-medium truncate ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {step.stepTitle}
+                  </div>
                 </div>
               </div>
               {index < formData.steps!.length - 1 && (
                 <div
                   className={`flex-1 h-1 mx-2 transition-colors ${
-                    index < currentStep ? 'bg-green-500' : 'bg-gray-200'
+                    index < currentStep ? 'bg-green-500' : isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
                   }`}
                 />
               )}
@@ -261,7 +351,7 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
           className="w-full h-2" 
         />
         
-        <div className="flex justify-between text-sm text-gray-500 mt-2">
+        <div className={`flex justify-between text-sm mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           <span>Step {currentStep + 1} of {totalSteps}</span>
           <span>{Math.round(((currentStep + 1) / totalSteps) * 100)}% Complete</span>
         </div>
@@ -281,12 +371,15 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
         case 'password':
         case 'url':
         case 'number':
+        case 'company':
+        case 'title':
           return (
             <Input
-              type={fieldType}
+              type={fieldType === 'company' || fieldType === 'title' ? 'text' : fieldType}
               placeholder={placeholder}
               required={required}
               disabled={isBuilderMode}
+              className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : ''}
             />
           )
 
@@ -296,7 +389,7 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
               placeholder={placeholder}
               required={required}
               disabled={isBuilderMode}
-              className="min-h-[100px]"
+              className={`min-h-[100px] ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
             />
           )
 
@@ -304,7 +397,7 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
         case 'dropdown':
           return (
             <Select disabled={isBuilderMode}>
-              <SelectTrigger>
+              <SelectTrigger className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : ''}>
                 <SelectValue placeholder={placeholder || `Select ${fieldLabel}`} />
               </SelectTrigger>
               <SelectContent>
@@ -323,7 +416,9 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
               {options?.map((option, idx) => (
                 <div key={idx} className="flex items-center space-x-2">
                   <RadioGroupItem value={option} id={`${fieldId}-${idx}`} />
-                  <Label htmlFor={`${fieldId}-${idx}`}>{option}</Label>
+                  <Label htmlFor={`${fieldId}-${idx}`} className={isDarkMode ? 'text-gray-300' : ''}>
+                    {option}
+                  </Label>
                 </div>
               ))}
             </RadioGroup>
@@ -336,7 +431,9 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
                 {options.map((option, idx) => (
                   <div key={idx} className="flex items-center space-x-2">
                     <Checkbox id={`${fieldId}-${idx}`} disabled={isBuilderMode} />
-                    <Label htmlFor={`${fieldId}-${idx}`}>{option}</Label>
+                    <Label htmlFor={`${fieldId}-${idx}`} className={isDarkMode ? 'text-gray-300' : ''}>
+                      {option}
+                    </Label>
                   </div>
                 ))}
               </div>
@@ -345,16 +442,68 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
             return (
               <div className="flex items-center space-x-2">
                 <Checkbox id={fieldId} disabled={isBuilderMode} />
-                <Label htmlFor={fieldId}>{fieldLabel}</Label>
+                <Label htmlFor={fieldId} className={isDarkMode ? 'text-gray-300' : ''}>
+                  {fieldLabel}
+                </Label>
               </div>
             )
           }
 
         case 'date':
-          return <Input type="date" disabled={isBuilderMode} />
+          return (
+            <Input 
+              type="date" 
+              disabled={isBuilderMode} 
+              className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : ''}
+            />
+          )
+
+        case 'date-signed':
+          return (
+            <Input 
+              type="date" 
+              disabled={isBuilderMode}
+              defaultValue={new Date().toISOString().split('T')[0]}
+              className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : ''}
+            />
+          )
 
         case 'file':
-          return <Input type="file" disabled={isBuilderMode} />
+          return (
+            <Input 
+              type="file" 
+              disabled={isBuilderMode}
+              className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : ''}
+            />
+          )
+
+        case 'signature':
+          return (
+            <div className={`border-2 border-dashed rounded-lg h-32 flex items-center justify-center cursor-pointer transition-colors ${
+              isDarkMode 
+                ? 'border-gray-600 bg-gray-800 hover:border-gray-500 text-gray-300' 
+                : 'border-gray-300 bg-gray-50 hover:border-gray-400 text-gray-600'
+            } ${isBuilderMode ? 'pointer-events-none' : ''}`}>
+              <div className="text-center">
+                <div className="text-2xl mb-2">✍️</div>
+                <div className="text-sm">Click to add signature</div>
+              </div>
+            </div>
+          )
+
+        case 'initial':
+          return (
+            <div className={`border-2 border-dashed rounded-lg h-20 flex items-center justify-center cursor-pointer transition-colors ${
+              isDarkMode 
+                ? 'border-gray-600 bg-gray-800 hover:border-gray-500 text-gray-300' 
+                : 'border-gray-300 bg-gray-50 hover:border-gray-400 text-gray-600'
+            } ${isBuilderMode ? 'pointer-events-none' : ''}`}>
+              <div className="text-center">
+                <div className="text-lg mb-1">📋</div>
+                <div className="text-sm">Add initials</div>
+              </div>
+            </div>
+          )
 
         default:
           return (
@@ -362,6 +511,7 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
               type="text"
               placeholder={placeholder}
               disabled={isBuilderMode}
+              className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : ''}
             />
           )
       }
@@ -370,7 +520,15 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
     return (
       <div
         key={fieldId}
-        className={`relative group p-4 border rounded-lg ${isBuilderMode ? 'border-dashed border-gray-300 hover:border-blue-400' : 'border-gray-200'} transition-colors`}
+        className={`relative group p-4 border rounded-lg transition-colors ${
+          isBuilderMode 
+            ? isDarkMode
+              ? 'border-dashed border-gray-600 hover:border-blue-400 bg-gray-900'
+              : 'border-dashed border-gray-300 hover:border-blue-400'
+            : isDarkMode
+              ? 'border-gray-700 bg-gray-900'
+              : 'border-gray-200'
+        }`}
         draggable={isBuilderMode}
         onDragStart={(e) => handleFieldDragStart(e, index)}
         onDragOver={handleDragOver}
@@ -402,39 +560,41 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
 
         <div className="space-y-2">
           {isEditing ? (
-            <div className="space-y-3 bg-gray-50 p-3 rounded">
+            <div className={`space-y-3 p-3 rounded ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
               <Input
                 value={field.fieldLabel}
                 onChange={(e) => updateField(fieldId, { fieldLabel: e.target.value })}
                 placeholder="Field Label"
+                className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : ''}
               />
               <Input
                 value={field.placeholder || ''}
                 onChange={(e) => updateField(fieldId, { placeholder: e.target.value })}
                 placeholder="Placeholder"
+                className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : ''}
               />
               <div className="flex items-center space-x-2">
                 <Checkbox
                   checked={field.required}
                   onCheckedChange={(checked) => updateField(fieldId, { required: !!checked })}
                 />
-                <Label>Required</Label>
+                <Label className={isDarkMode ? 'text-gray-300' : ''}>Required</Label>
               </div>
               {(fieldType === 'select' || fieldType === 'radio' || fieldType === 'checkbox') && (
                 <div>
-                  <Label>Options (one per line)</Label>
+                  <Label className={isDarkMode ? 'text-gray-300' : ''}>Options (one per line)</Label>
                   <Textarea
                     value={field.options?.join('\n') || ''}
                     onChange={(e) => updateField(fieldId, { options: e.target.value.split('\n').filter(o => o.trim()) })}
                     placeholder="Option 1&#10;Option 2&#10;Option 3"
-                    className="mt-1"
+                    className={`mt-1 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : ''}`}
                   />
                 </div>
               )}
             </div>
           ) : (
             <>
-              <Label className="flex items-center">
+              <Label className={`flex items-center ${isDarkMode ? 'text-gray-300' : ''}`}>
                 {fieldLabel}
                 {required && <span className="text-red-500 ml-1">*</span>}
                 {isBuilderMode && (
@@ -451,60 +611,138 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
     )
   }
 
+  const themeClass = isDarkMode ? 'dark bg-gray-900 text-white' : 'bg-gray-50'
+
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className={`flex h-screen ${themeClass}`}>
       {/* Left Sidebar - Form Elements */}
-      <div className="w-80 bg-white border-r border-gray-200 p-4 overflow-y-auto">
+      <div className={`w-80 border-r p-4 overflow-y-auto ${
+        isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
+      }`}>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Form Elements</h2>
-            <Button
-              size="sm"
-              onClick={() => setIsBuilderMode(!isBuilderMode)}
-              variant={isBuilderMode ? "default" : "outline"}
-            >
-              {isBuilderMode ? 'Preview' : 'Edit'}
-            </Button>
+            <h2 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : ''}`}>
+              Form Elements
+            </h2>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsDarkMode(!isDarkMode)}
+              >
+                {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setIsBuilderMode(!isBuilderMode)}
+                variant={isBuilderMode ? "default" : "outline"}
+              >
+                {isBuilderMode ? 'Preview' : 'Edit'}
+              </Button>
+            </div>
           </div>
           
           <div className="space-y-2">
-            {preBuiltElements.map((element, index) => (
+            {enhancedPreBuiltElements.map((element, index) => (
               <div
                 key={index}
                 draggable
                 onDragStart={(e) => handleElementDragStart(e, element)}
-                className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-grab hover:bg-gray-100 transition-colors"
+                className={`flex items-center space-x-3 p-3 rounded-lg border cursor-grab hover:bg-opacity-80 transition-colors ${
+                  isDarkMode 
+                    ? 'bg-gray-800 border-gray-700 hover:bg-gray-700 text-white'
+                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                }`}
               >
                 <span className="text-lg">{element.icon}</span>
                 <span className="font-medium text-sm">{element.label}</span>
-                <Plus size={16} className="ml-auto text-gray-400" />
+                <Plus size={16} className={`ml-auto ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`} />
               </div>
             ))}
           </div>
 
-          <Separator />
+          <Separator className={isDarkMode ? 'bg-gray-700' : ''} />
 
           {/* Form Settings */}
           <div>
-            <h3 className="font-medium mb-3">Form Settings</h3>
+            <h3 className={`font-medium mb-3 ${isDarkMode ? 'text-white' : ''}`}>Form Settings</h3>
             <div className="space-y-3">
               <div>
-                <Label>Form Title</Label>
+                <Label className={isDarkMode ? 'text-gray-300' : ''}>Form Title</Label>
                 <Input
                   value={formData.formTitle}
                   onChange={(e) => setFormData(prev => ({ ...prev, formTitle: e.target.value }))}
                   placeholder="Form Title"
+                  className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : ''}
                 />
               </div>
               <div>
-                <Label>Form Subheading</Label>
+                <Label className={isDarkMode ? 'text-gray-300' : ''}>Form Subheading</Label>
                 <Textarea
                   value={formData.formSubheading}
                   onChange={(e) => setFormData(prev => ({ ...prev, formSubheading: e.target.value }))}
                   placeholder="Form description..."
-                  className="min-h-[80px]"
+                  className={`min-h-[80px] ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
                 />
               </div>
+              
+              {/* Share & Preview Buttons */}
+              <div className="space-y-2">
+                <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full" variant="outline">
+                      <Share2 size={16} className="mr-2" />
+                      Share Form
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className={isDarkMode ? 'bg-gray-900 border-gray-700' : ''}>
+                    <DialogHeader>
+                      <DialogTitle className={isDarkMode ? 'text-white' : ''}>Share Your Form</DialogTitle>
+                      <DialogDescription className={isDarkMode ? 'text-gray-400' : ''}>
+                        Share this form with others using the link below
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          value={generateShareLink()}
+                          readOnly
+                          className={`flex-1 ${isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => copyToClipboard(generateShareLink())}
+                        >
+                         {copied ? (
+    <Check className="w-4 h-4" />
+  ) : (
+    <Copy className="w-4 h-4" />
+  )}
+                        </Button>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          className="flex-1"
+                          onClick={() => window.open(generateShareLink(), '_blank')}
+                        >
+                          <ExternalLink size={16} className="mr-2" />
+                          Open Live Form
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={() => setPreviewMode(!previewMode)}
+                >
+                  <Eye size={16} className="mr-2" />
+                  {previewMode ? 'Exit Preview' : 'Live Preview'}
+                </Button>
+              </div>
+
               <Button className="w-full" variant="outline">
                 <Save size={16} className="mr-2" />
                 Save Form
@@ -515,30 +753,37 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
       </div>
 
       {/* Right Side - Form Preview/Builder */}
-      <div className="flex-1 p-6 overflow-y-auto">
+      <div className={`flex-1 p-6 overflow-y-auto ${isDarkMode ? 'bg-gray-900' : ''}`}>
         <div className="max-w-2xl mx-auto">
-          <Card className="shadow-lg">
+          <Card className={`shadow-lg ${isDarkMode ? 'bg-gray-800 border-gray-700' : ''}`}>
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl font-bold text-gray-800">
+              <CardTitle className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                 {formData.formTitle}
               </CardTitle>
               {formData.formSubheading && (
-                <CardDescription className="text-gray-600 mt-2">
+                <CardDescription className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
                   {formData.formSubheading}
                 </CardDescription>
               )}
               
-              {isMultiStep && !isBuilderMode && renderMultiStepNav()}
+              {(previewMode || !isBuilderMode) && renderMultiStepNav()}
+              
+              {previewMode && (
+                <Badge variant="secondary" className="mx-auto w-fit">
+                  <Eye size={14} className="mr-1" />
+                  Live Preview Mode
+                </Badge>
+              )}
             </CardHeader>
             
             <CardContent>
               {isMultiStep && (
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-800">
+                  <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                     {formData.steps![currentStep]?.stepTitle}
                   </h3>
                   {formData.steps![currentStep]?.stepDescription && (
-                    <p className="text-gray-600 mt-1">
+                    <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
                       {formData.steps![currentStep].stepDescription}
                     </p>
                   )}
@@ -546,13 +791,15 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
               )}
 
               <div
-                className={`space-y-6 ${isBuilderMode ? 'min-h-[300px]' : ''}`}
+                className={`space-y-6 ${isBuilderMode && !previewMode ? 'min-h-[300px]' : ''}`}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e)}
               >
-                {getCurrentFields().length === 0 && isBuilderMode ? (
-                  <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
-                    <p className="text-gray-500">
+                {getCurrentFields().length === 0 && isBuilderMode && !previewMode ? (
+                  <div className={`text-center py-12 border-2 border-dashed rounded-lg ${
+                    isDarkMode ? 'border-gray-600 text-gray-400' : 'border-gray-300 text-gray-500'
+                  }`}>
+                    <p>
                       Drag and drop form elements here to build your {isMultiStep ? 'step' : 'form'}
                     </p>
                   </div>
@@ -560,7 +807,7 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
                   getCurrentFields().map((field, index) => renderField(field, index))
                 )}
                 
-                {!isBuilderMode && getCurrentFields().length > 0 && (
+                {(!isBuilderMode || previewMode) && getCurrentFields().length > 0 && (
                   <div className="pt-4">
                     {isMultiStep ? (
                       <div className="flex justify-between">
@@ -569,6 +816,7 @@ const FormBuilder = ({ initialData }: { initialData?: FormData }) => {
                           variant="outline"
                           onClick={prevStep}
                           disabled={currentStep === 0}
+                          className={isDarkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-800' : ''}
                         >
                           <ChevronLeft size={16} className="mr-2" />
                           Previous
@@ -628,9 +876,7 @@ const Forms = ({ params }: { params: Promise<{ id: string }> }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">Loading form...</div>
-      </div>
+      <FormLoading/>
     )
   }
 

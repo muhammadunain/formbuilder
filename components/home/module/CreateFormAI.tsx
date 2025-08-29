@@ -60,7 +60,7 @@ const CreateFormAI = () => {
   const currentPrompts = isMultiStep ? multiStepPrompts : singleStepPrompts
 
   return (
-    <div className="w-full max-w-3xl mx-auto text-white px-6 py-10 rounded-2xl shadow-lg bg-white/10">
+    <div className="w-full max-w-3xl mx-auto  px-6 py-10 rounded-2xl shadow-lg bg-white/10">
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">AI Form Builder</h1>

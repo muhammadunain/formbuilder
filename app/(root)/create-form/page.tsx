@@ -9,7 +9,7 @@ const CreateForm = () => {
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+      <div className="absolute inset-0 ">
         {/* Floating elements */}
         <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full opacity-20 animate-pulse"></div>
         <div className="absolute top-40 right-20 w-16 h-16 bg-gradient-to-r from-pink-400 to-rose-400 rounded-full opacity-20 animate-bounce"></div>
@@ -37,7 +37,7 @@ const CreateForm = () => {
                 Design
               </span>
               <br />
-              <span className="text-gray-900">Amazing Forms</span>
+              <span >Amazing Forms</span>
             </h1>
             
             <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
