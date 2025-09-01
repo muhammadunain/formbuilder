@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle } from "lucide-react";
+import Link from "next/link";
 
 const CTA = () => {
   return (
@@ -13,31 +14,35 @@ const CTA = () => {
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Join thousands of teams already using AI FormBuilder to create better forms faster. 
-            Start your free trial today and experience the future of form creation.
+            Start creating your forms today and experience the future of form creation.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="hero" size="lg" className="group">
-              Start Free Trial
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button  size="lg">
-              Schedule Demo
-            </Button>
+            <Link href="/create">
+              <Button variant="hero" size="lg" className="group">
+                Create Your First Form
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+            <Link href="/dashboard">
+              <Button size="lg">
+                View Dashboard
+              </Button>
+            </Link>
           </div>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              <span>14-day free trial</span>
+              <span>AI-powered form generation</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              <span>No credit card required</span>
+              <span>Unlimited forms</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              <span>Cancel anytime</span>
+              <span>Response analytics</span>
             </div>
           </div>
         </div>

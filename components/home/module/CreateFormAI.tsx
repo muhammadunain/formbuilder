@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { CreateForm } from '@/lib/actions/create.form.action'
 import { Loader, AlertCircle, Layers, FileText } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useUser, SignInButton } from '@clerk/nextjs'
 
 const singleStepPrompts = [
   'Create a professional real estate property submission form',
@@ -26,6 +27,46 @@ const CreateFormAI = () => {
   const [error, setError] = useState<string>('')
   const [isMultiStep, setIsMultiStep] = useState<boolean>(false)
   const router = useRouter()
+  const { isSignedIn, isLoaded } = useUser()
+
+  // Show loading while checking auth status
+  if (!isLoaded) {
+    return (
+      <div className="w-full max-w-3xl mx-auto px-6 py-10 rounded-2xl shadow-lg bg-white/10">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+          <p className="mt-4 text-gray-300">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show sign-in prompt if not authenticated
+  if (!isSignedIn) {
+    return (
+      <div className="w-full max-w-3xl mx-auto px-6 py-10 rounded-2xl shadow-lg bg-white/10">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">AI Form Builder</h1>
+          <p className="text-lg mb-6">Sign in to create and manage your forms</p>
+          <SignInButton mode="modal">
+            <Button variant="hero" className="px-8 py-3">
+              Sign In to Continue
+            </Button>
+          </SignInButton>
+        </div>
+        
+        <div className="mt-8 p-4 bg-white/5 rounded-lg">
+          <h3 className="font-medium text-blue-400 mb-2">Why sign in?</h3>
+          <ul className="text-sm text-gray-300 space-y-1">
+            <li>• Create unlimited forms with AI</li>
+            <li>• Save and manage your forms</li>
+            <li>• View form responses and analytics</li>
+            <li>• Share forms with others</li>
+          </ul>
+        </div>
+      </div>
+    )
+  }
 
   const handleSubmit = async (): Promise<void> => {
     if (!userInput.trim()) {

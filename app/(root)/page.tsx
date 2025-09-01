@@ -5,6 +5,7 @@ import Hero from '@/components/home/module/Hero'
 import DarkVeil from '@/components/home/module/HeroSection'
 import HowItWorks from '@/components/home/module/HowItWork'
 import Testimonials from '@/components/home/module/testimonials'
+import QuickNav from '@/components/navigation/QuickNav'
 import React from 'react'
 
 const Home = () => {
@@ -14,6 +15,7 @@ const Home = () => {
   <DarkVeil />
 </div> */}
 <Hero/>
+
 <Features/>
 <HowItWorks/>
 <Testimonials/>

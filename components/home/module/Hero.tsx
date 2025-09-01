@@ -27,14 +27,12 @@ const Hero = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link href={'/create-form'}>
-              <Button variant="hero" size="lg" className="group">
-                Start Building Free
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
+                <Button variant="hero" size="lg" className="group">
+                  Start Building Free
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
               </Link>
-              <Button  size="lg">
-                Watch Demo
-              </Button>
+             
             </div>
             
             <div className="flex items-center gap-8 justify-center lg:justify-start text-sm text-muted-foreground">
@@ -52,7 +50,7 @@ const Hero = () => {
           <div className="relative animate-fade-in">
             <div className="relative z-10">
               <img 
-                src={'/hero.jpg'} 
+                src={'/main.jpg'} 
                 alt="AI Form Builder Interface" 
                 className="w-full h-auto rounded-2xl shadow-elegant animate-glow-pulse"
               />
