@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { toast } from 'sonner'
 import { 
   FileText, 
   Plus, 
@@ -18,7 +19,10 @@ import {
   Globe,
   Lock,
   Layers,
-  ExternalLink
+  ExternalLink,
+  Copy,
+  Check,
+  CopyIcon
 } from 'lucide-react'
 import { getUserForms, getDashboardStats, publishForm, unpublishForm, syncUser } from '@/lib/actions/create.form.action'
 import { useRouter } from 'next/navigation'
@@ -50,6 +54,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true)
   const [publishingForm, setPublishingForm] = useState<string | null>(null)
   const [unpublishingForm, setUnpublishingForm] = useState<string | null>(null)
+  const [copiedFormId, setCopiedFormId] = useState<string | null>(null)
   const router = useRouter()
   const { user, isLoaded } = useUser()
 
@@ -79,6 +84,7 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error)
+      toast.error('Failed to load dashboard data')
     } finally {
       setLoading(false)
     }
@@ -96,9 +102,13 @@ const Dashboard = () => {
         ))
         // Update stats
         setStats(prev => ({ ...prev, publishedForms: prev.publishedForms + 1 }))
+        toast.success('Form published successfully!')
+      } else {
+        toast.error('Failed to publish form')
       }
     } catch (error) {
       console.error('Error publishing form:', error)
+      toast.error('Failed to publish form')
     } finally {
       setPublishingForm(null)
     }
@@ -116,9 +126,13 @@ const Dashboard = () => {
         ))
         // Update stats
         setStats(prev => ({ ...prev, publishedForms: prev.publishedForms - 1 }))
+        toast.success('Form unpublished successfully!')
+      } else {
+        toast.error('Failed to unpublish form')
       }
     } catch (error) {
       console.error('Error unpublishing form:', error)
+      toast.error('Failed to unpublish form')
     } finally {
       setUnpublishingForm(null)
     }
@@ -136,10 +150,24 @@ const Dashboard = () => {
     router.push(`/dashboard/responses/${formId}`)
   }
 
-  const handleShareForm = (formId: string) => {
-    const shareUrl = `${window.location.origin}/form/${formId}`
-    navigator.clipboard.writeText(shareUrl)
-    // You could add a toast notification here
+  const handleShareForm = async (formId: string) => {
+    try {
+      const shareUrl = `${window.location.origin}/form/${formId}`
+      await navigator.clipboard.writeText(shareUrl)
+      
+      // Set copied state for visual feedback
+      setCopiedFormId(formId)
+      
+      // Reset the copied state after 2 seconds
+      setTimeout(() => {
+        setCopiedFormId(null)
+      }, 2000)
+      
+      toast.success('Form link copied to clipboard!')
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error)
+      toast.error('Failed to copy link to clipboard')
+    }
   }
 
   const handleLivePreview = (formId: string) => {
@@ -175,7 +203,7 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card className="hover:shadow-sm transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Forms</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
@@ -188,7 +216,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card className="hover:shadow-sm transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Published Forms</CardTitle>
               <Globe className="h-4 w-4 text-muted-foreground" />
@@ -201,7 +229,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card className="hover:shadow-sm transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Responses</CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
@@ -243,7 +271,7 @@ const Dashboard = () => {
                 {forms.map((form) => (
                   <div
                     key={form.id}
-                    className="flex items-start justify-between p-6 border rounded-lg hover:bg-gray-50 transition-colors bg-white shadow-sm"
+                    className="flex items-start justify-between p-6 border rounded-lg hover:bg-gray-50 transition-colors bg-white "
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-3">
@@ -331,9 +359,14 @@ const Dashboard = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => handleShareForm(form.id)}
-                              title="Copy Share Link"
+                              title={copiedFormId === form.id ? "Copied!" : "Copy Share Link"}
+                              className={copiedFormId === form.id ? "text-green-600 border-green-300" : ""}
                             >
-                              <Share2 size={14} />
+                              {copiedFormId === form.id ? (
+                                <Check size={14} className="text-green-600" />
+                              ) : (
+                                <CopyIcon size={14} />
+                              )}
                             </Button>
                             <Button
                               variant="outline"

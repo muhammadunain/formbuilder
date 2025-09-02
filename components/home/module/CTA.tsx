@@ -4,9 +4,9 @@ import Link from "next/link";
 
 const CTA = () => {
   return (
-    <section className="py-24 bg-gradient-hero">
+    <section className="py-24  bg-gradient-hero">
       <div className="container mx-auto px-4 text-center">
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className=" mx-auto space-y-8">
           <h2 className="text-3xl md:text-5xl font-bold text-foreground">
             Ready to Build Amazing Forms with{" "}
             <span className="brand-bg bg-clip-text text-transparent">AI</span>
@@ -18,17 +18,13 @@ const CTA = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/create">
+            <Link href="/create-form">
               <Button variant="hero" size="lg" className="group">
                 Create Your First Form
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-            <Link href="/dashboard">
-              <Button size="lg">
-                View Dashboard
-              </Button>
-            </Link>
+          
           </div>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-muted-foreground">

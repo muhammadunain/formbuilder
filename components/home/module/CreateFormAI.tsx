@@ -44,9 +44,9 @@ const CreateFormAI = () => {
   // Show sign-in prompt if not authenticated
   if (!isSignedIn) {
     return (
-      <div className="w-full max-w-3xl mx-auto px-6 py-10 rounded-2xl shadow-lg bg-white/10">
+      <div className="w-full max-w-4xl mx-auto px-6 py-10 rounded-2xl  bg-white/10">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">AI Form Builder</h1>
+          <h1 className="text-3xl font-bold mb-2">Formora AI</h1>
           <p className="text-lg mb-6">Sign in to create and manage your forms</p>
           <SignInButton mode="modal">
             <Button variant="hero" className="px-8 py-3">
@@ -101,7 +101,7 @@ const CreateFormAI = () => {
   const currentPrompts = isMultiStep ? multiStepPrompts : singleStepPrompts
 
   return (
-    <div className="w-full max-w-3xl mx-auto  px-6 py-10 rounded-2xl shadow-lg bg-white/10">
+    <div className="w-full max-w-4xl mx-auto  px-6 py-10 rounded-2xl  bg-white/10">
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-2">AI Form Builder</h1>

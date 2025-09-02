@@ -18,6 +18,7 @@ import { Trash2, GripVertical, Plus, Edit, Save, ChevronLeft, ChevronRight, Chec
 import { preBuiltElements } from '@/constants/bgcode'
 import FormLoading from '@/components/home/module/Loading'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 interface FormField {
   fieldId: string
@@ -327,6 +328,8 @@ const FormBuilderWithSave = ({ initialData, formId }: { initialData?: FormData, 
       
       if (response.success) {
         setIsPublished(true)
+                toast.success('Form published successfully!')
+        
         console.log('Form published successfully')
       } else {
         console.error('Error publishing form:', response.error)
