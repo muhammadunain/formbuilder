@@ -30,6 +30,7 @@ import { useUser } from '@clerk/nextjs'
 import { formatDistanceToNow } from 'date-fns'
 import DashboardSkeleton from '@/components/ui/skeletons/DashboardSkeleton'
 import Link from 'next/link'
+import { Metadata } from 'next'
 
 interface FormData {
   id: string
@@ -406,3 +407,7 @@ const Dashboard = () => {
 }
 
 export default Dashboard
+export const metadata: Metadata = {
+  title: "Dashboard | Formora AI",
+  description: "Manage your forms, track submissions, and customize your form experience from the Formora AI dashboard.",
+};
